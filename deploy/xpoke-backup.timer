@@ -1,0 +1,9 @@
+[Unit]
+Description=XPoke database snapshot every hour
+
+[Timer]
+OnCalendar=*-*-* *:17:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

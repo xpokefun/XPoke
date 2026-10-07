@@ -1,0 +1,6 @@
+# append to /root/Caddyfile, then: caddy validate --config /root/Caddyfile && systemctl reload caddy
+# ⛔ never `caddy stop` (it stops the systemd instance and every vhost)
+DOMAIN, www.DOMAIN {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:5340
+}

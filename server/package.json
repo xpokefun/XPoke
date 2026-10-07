@@ -1,0 +1,29 @@
+{
+  "name": "xpoke-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "XPoke: a Pok\u00e9mon game played by mentioning the bot on X, with $XPOKE wagers on Robinhood Chain",
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env node_modules/tsx/dist/cli.mjs watch src/index.ts",
+    "start": "node --env-file-if-exists=.env node_modules/tsx/dist/cli.mjs src/index.ts",
+    "admin": "node --env-file-if-exists=.env node_modules/tsx/dist/cli.mjs src/admin.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "login:x": "node --env-file-if-exists=.env node_modules/tsx/dist/cli.mjs src/loginx.ts",
+    "check:llm": "node --env-file-if-exists=.env node_modules/tsx/dist/cli.mjs src/check-llm.ts",
+    "golive": "node --env-file-if-exists=.env node_modules/tsx/dist/cli.mjs src/golive.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.99.0",
+    "bs58": "^6.0.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

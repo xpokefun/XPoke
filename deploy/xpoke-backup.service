@@ -1,0 +1,8 @@
+[Unit]
+Description=XPoke database snapshot
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/xpoke/server
+Environment=BACKUP_DIR=/root/xpoke-backups
+ExecStart=/usr/bin/node --env-file=.env scripts/backup.mjs

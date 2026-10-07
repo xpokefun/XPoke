@@ -1,0 +1,13 @@
+[Unit]
+Description=XPoke (X agent, chain watcher, site)
+After=network-online.target
+
+[Service]
+WorkingDirectory=/root/xpoke/server
+ExecStart=/usr/bin/node --env-file=.env node_modules/tsx/dist/cli.mjs src/index.ts
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
