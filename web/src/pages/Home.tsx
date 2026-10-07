@@ -41,6 +41,9 @@ export default function Home() {
           <Link className="btn" to="/stats">
             on-chain stats
           </Link>
+          <a className="btn" href="https://github.com/xpokefun/XPoke" target="_blank" rel="noreferrer">
+            open source
+          </a>
           <Link className="btn primary" to="/docs">
             how to play
           </Link>

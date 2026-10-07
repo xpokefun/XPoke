@@ -176,6 +176,9 @@ function Footer({ config }: { config: Config | null }) {
         ) : null}
         <Link to="/docs">docs</Link>
         <Link to="/stats">on-chain stats</Link>
+        <a href="https://github.com/xpokefun/XPoke" target="_blank" rel="noreferrer">
+          open source
+        </a>
       </div>
     </footer>
   )

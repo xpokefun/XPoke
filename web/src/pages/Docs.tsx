@@ -24,7 +24,8 @@ const SECTIONS: [string, string][] = [
   ['team', '19. Managing Your Team'],
   ['website', '20. Website Features'],
   ['tips', '21. Tips & Tricks'],
-  ['soon', '22. Coming Soon'],
+  ['open-source', '22. Open Source'],
+  ['soon', '23. Coming Soon'],
 ]
 
 function Cmd({ name, desc, eg }: { name: string; desc: string; eg: string[] }) {
@@ -614,8 +615,25 @@ pvp lock  30 min (auto-expires if not accepted)`}</pre>
 "tournament join"                                 = join the open tournament`}</pre>
           </section>
 
+          <section id="open-source">
+            <h2>22. Open Source</h2>
+            <p>
+              XPoke is open source under the MIT license: the X agent, the game engine, the Solana payment and payout code, and this website.
+              Read it, run it locally, or review how player money is handled at{' '}
+              <a href="https://github.com/xpokefun/XPoke" target="_blank" rel="noreferrer">
+                github.com/xpokefun/XPoke
+              </a>
+              .
+            </p>
+            <ul>
+              <li>Every payment, payout, refund and burn checks a solvency rule before it is sent, and is listed with its Solana signature on /stats.</li>
+              <li>There is no on-chain program: the server holds the pool wallet and acts as escrow. The README explains exactly what that means.</li>
+              <li>Found a security problem? Please report it privately (see SECURITY.md in the repo), not in a public issue.</li>
+            </ul>
+          </section>
+
           <section id="soon">
-            <h2>22. Coming Soon</h2>
+            <h2>23. Coming Soon</h2>
             <ul>
               <li>
                 <b>Quests</b>: daily and weekly quests for {sym} rewards, rare Pokémon and badges.
