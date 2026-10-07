@@ -15,6 +15,7 @@ import Stats from './pages/Stats.tsx'
 import TrainerPage from './pages/Trainer.tsx'
 import Dev from './pages/Dev.tsx'
 import WalletPage from './pages/Wallet.tsx'
+import Leaderboards from './pages/Leaderboards.tsx'
 
 function Header({ config, me }: { config: Config | null; me: Me | null }) {
   const [open, setOpen] = useState(false)
@@ -26,48 +27,64 @@ function Header({ config, me }: { config: Config | null; me: Me | null }) {
   const wallet = me?.trainer?.wallet ?? null
   return (
     <header className="header">
-      <div className="wrap">
+      <div className="wrap header-grid">
         <Link to="/" className="logo">
           <Logo size={24} />
           <span>XPoke</span>
         </Link>
-        <button className="menu-btn" aria-label="menu" onClick={() => setOpen((o) => !o)}>
-          {open ? 'close' : 'menu'}
-        </button>
-        <nav className={`nav${open ? ' open' : ''}`}>
-          <NavLink to="/docs">Docs</NavLink>
+        <nav className={`nav${open ? ' open' : ''}`} aria-label="main">
           <NavLink to="/pokedex">Pokédex</NavLink>
           <NavLink to="/shop">Shop</NavLink>
           <NavLink to="/tournament">Tournament</NavLink>
+          <NavLink to="/leaderboards">Leaderboard</NavLink>
           <NavLink to="/agent">Agent</NavLink>
           <NavLink to="/stats">Stats</NavLink>
+          <NavLink to="/docs">Docs</NavLink>
           {config ? (
             <a href={`https://x.com/${config.handle}`} target="_blank" rel="noreferrer">
               X
             </a>
           ) : null}
           {config?.devLogin ? <NavLink to="/dev">Dev</NavLink> : null}
-          {user ? (
-            <>
-              <AccountMenu me={me!} />
-              <div className="mobile-account">
+          {/* account items live inside the collapsed menu on narrow screens */}
+          <div className="mobile-account">
+            {user ? (
+              <>
                 <NavLink to="/me">My profile</NavLink>
                 <NavLink to="/wallet">
                   Wallet <span className="faint small">{wallet ? short(wallet.address) : 'not linked'}</span>
                 </NavLink>
                 <SignOut className="nav-signout" />
-              </div>
-            </>
-          ) : config?.loginWithX ? (
-            <a className="login" href="/auth/x/login">
-              Login with X
-            </a>
-          ) : (
-            <NavLink to="/me" className="login">
-              Login with X
-            </NavLink>
-          )}
+              </>
+            ) : config?.loginWithX ? (
+              <a className="login" href="/auth/x/login">
+                Login with X
+              </a>
+            ) : (
+              <NavLink to="/me" className="login">
+                Login with X
+              </NavLink>
+            )}
+          </div>
         </nav>
+        <div className="header-right">
+          <div className="header-account">
+            {user ? (
+              <AccountMenu me={me!} />
+            ) : config?.loginWithX ? (
+              <a className="login-btn" href="/auth/x/login">
+                Login with X
+              </a>
+            ) : (
+              <NavLink to="/me" className="login-btn">
+                Login with X
+              </NavLink>
+            )}
+          </div>
+          <button className="menu-btn" aria-label="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+            {open ? 'close' : 'menu'}
+          </button>
+        </div>
       </div>
     </header>
   )
@@ -174,11 +191,11 @@ function Footer({ config }: { config: Config | null }) {
             @{config.handle}
           </a>
         ) : null}
+        <a href="https://github.com/xpokefun/XPoke" target="_blank" rel="noreferrer">
+          github
+        </a>
         <Link to="/docs">docs</Link>
         <Link to="/stats">on-chain stats</Link>
-        <a href="https://github.com/xpokefun/XPoke" target="_blank" rel="noreferrer">
-          open source
-        </a>
       </div>
     </footer>
   )
@@ -212,6 +229,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/docs" element={<Docs />} />
             <Route path="/pokedex" element={<Pokedex />} />
+            <Route path="/leaderboards" element={<Leaderboards />} />
             <Route path="/me" element={<MePage />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/tournament" element={<Tournament />} />

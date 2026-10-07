@@ -588,6 +588,10 @@ pvp lock  30 min (auto-expires if not accepted)`}</pre>
                 <b>Leaderboard</b> (home page): top trainers by total wins, live.
               </li>
               <li>
+                <b>Leaderboards (/leaderboards)</b>: five boards, trainers by wins, gym medals, highest-level Pokémon, shiny collectors and wager
+                winners, refreshed every 30 seconds.
+              </li>
+              <li>
                 <b>Shop, Tournament, Agent log and on-chain Stats</b> pages.
               </li>
             </ul>

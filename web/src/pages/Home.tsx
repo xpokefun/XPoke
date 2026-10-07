@@ -232,7 +232,7 @@ function PvpQueue() {
 function Leaderboard() {
   const { data } = useApi<{ items: LeaderRow[] }>('/api/leaderboard?limit=25', 30_000)
   return (
-    <Term cmd="xpoke --leaderboard" right="top trainers by wins" flush>
+    <Term cmd="xpoke --leaderboard" right={<Link to="/leaderboards">all leaderboards →</Link>} flush>
       {!data ? (
         <Loading />
       ) : !data.items.length ? (

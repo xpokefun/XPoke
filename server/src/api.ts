@@ -21,6 +21,7 @@ import {
   party,
   sp,
   trainerByHandle,
+  type Mon,
   type Trainer,
 } from './game/store.ts'
 import { BALLS, GYMS, PARTY_MAX, ORDER_WINDOW, TOURNAMENT_SIZE, trainerLevel, TRAINER_LEVELS } from './game/rules.ts'
@@ -28,7 +29,7 @@ import { gymFighter } from './game/engine.ts'
 import { activeWagerOf, cancelWagerBy, getWager, wagerView, TOKEN, type Wager } from './game/wager.ts'
 import { resolveTrade, expireTrades, type Trade } from './game/trade.ts'
 import { createTournament, entries, joinTournament, openTournament, type Tournament } from './game/tournament.ts'
-import { showAmount, toWei, uniqueAmount, TOKEN_DECIMALS } from './pay/amounts.ts'
+import { roundAmount, showAmount, toWei, uniqueAmount, TOKEN_DECIMALS } from './pay/amounts.ts'
 import { buildAllowance, buildPayment, chainStatus, checkTx, EXPLORER, isAddress, isSignature, poolBalances, resolveToken, scanOnce, type Sol } from './pay/solana.ts'
 import { xStatus, processMention, announce, usage, type Deps } from './agent.ts'
 import { completeLink, createChallenge, unlink, WalletError } from './wallet.ts'
@@ -98,6 +99,7 @@ function memo<T>(ms: number, fn: () => Promise<T>): () => Promise<T> {
  */
 const PUBLIC_TTL: [RegExp, number][] = [
   [/^\/api\/(leaderboard|trainers|tournament)$/, 5_000],
+  [/^\/api\/leaderboards\/[a-z]+$/, 5_000],
   [/^\/api\/trainer\/[^/]+$/, 5_000],
   [/^\/api\/(pokedex|gym)$/, 30_000],
   [/^\/api\/(agent\/activity|agent\/status|pvp\/recent|pvp\/pending)$/, 3_000],
@@ -311,6 +313,80 @@ export function startApi(d: Deps, chain: Sol) {
   }
 
   route('GET', '/api/leaderboard', (_req, _res, _p, url) => ({ items: leaderboard(intParam(url, 'limit', 100, 500)) }))
+
+  /**
+   * The Leaderboards page: one board at a time.
+   *  trainers  most battle wins            medals   most gym medals
+   *  pokemon   highest-level Pokémon       shinies  most shiny Pokémon owned
+   *  wagers    most wagers won, and $XPOKE won (99% of each pot won)
+   */
+  route('GET', '/api/leaderboards/:board', (_req, _res, p, url) => {
+    const limit = intParam(url, 'limit', 50, 100)
+    const who = (id: string) => {
+      const t = getTrainer(db, id)
+      return { handle: t?.handle ?? '?', avatar: t?.avatar ?? null, trainerLevel: trainerLevel(t?.wins ?? 0) }
+    }
+    switch (p.board) {
+      case 'trainers':
+        return {
+          board: 'trainers',
+          items: leaderboard(limit).map((r) => ({ rank: r.rank, handle: r.handle, avatar: r.avatar, trainerLevel: r.trainerLevel, value: r.wins, detail: { wins: r.wins, losses: r.losses, bestLevel: r.bestLevel, medals: r.medals, pokemon: r.total } })),
+        }
+      case 'medals': {
+        const rows = db
+          .prepare('select m.trainer_id, count(*) as n, max(m.gym) as top, t.wins from medals m join trainers t on t.id = m.trainer_id group by m.trainer_id order by n desc, top desc, t.wins desc limit ?')
+          .all(limit) as { trainer_id: string; n: number; top: number; wins: number }[]
+        return { board: 'medals', items: rows.map((r, i) => ({ rank: i + 1, ...who(r.trainer_id), value: r.n, detail: { highestGym: GYMS[r.top - 1]?.leader ?? null, wins: r.wins } })) }
+      }
+      case 'pokemon': {
+        const rows = db
+          .prepare("select * from pokemon where location != 'released' order by level desc, xp desc, wins desc, id asc limit ?")
+          .all(limit) as Mon[]
+        return {
+          board: 'pokemon',
+          items: rows.map((m, i) => ({
+            rank: i + 1,
+            ...who(m.trainer_id),
+            value: m.level,
+            detail: { name: sp(m).name, sprite: spriteId(sp(m)), shiny: Boolean(m.shiny), types: sp(m).types, rarity: sp(m).rarity, wins: m.wins, losses: m.losses, xp: m.xp },
+          })),
+        }
+      }
+      case 'shinies': {
+        const rows = db
+          .prepare("select trainer_id, count(*) as n, max(level) as best from pokemon where shiny = 1 and location != 'released' group by trainer_id order by n desc, best desc limit ?")
+          .all(limit) as { trainer_id: string; n: number; best: number }[]
+        return {
+          board: 'shinies',
+          items: rows.map((r, i) => {
+            const top = db.prepare("select * from pokemon where trainer_id = ? and shiny = 1 and location != 'released' order by level desc limit 1").get(r.trainer_id) as Mon
+            return { rank: i + 1, ...who(r.trainer_id), value: r.n, detail: { best: { name: sp(top).name, sprite: spriteId(sp(top)), level: top.level } } }
+          }),
+        }
+      }
+      case 'wagers': {
+        const won = new Map<string, { n: number; tokens: bigint }>()
+        for (const w of db.prepare("select challenger_id, target_id, winner, paid_a_amount, paid_b_amount from wagers where status = 'complete'").all() as {
+          challenger_id: string
+          target_id: string
+          winner: number
+          paid_a_amount: string
+          paid_b_amount: string
+        }[]) {
+          const id = w.winner === 0 ? w.challenger_id : w.target_id
+          const pot = BigInt(w.paid_a_amount) + BigInt(w.paid_b_amount)
+          const e = won.get(id) ?? { n: 0, tokens: 0n }
+          e.n++
+          e.tokens += pot - pot / 100n
+          won.set(id, e)
+        }
+        const rows = [...won.entries()].sort((a, b) => (b[1].tokens > a[1].tokens ? 1 : b[1].tokens < a[1].tokens ? -1 : b[1].n - a[1].n)).slice(0, limit)
+        return { board: 'wagers', items: rows.map(([id, e], i) => ({ rank: i + 1, ...who(id), value: e.n, detail: { tokensWon: roundAmount(e.tokens) } })) }
+      }
+      default:
+        throw new HttpError(404, 'unknown board: trainers, medals, pokemon, shinies or wagers')
+    }
+  })
 
   route('GET', '/api/gym', () => ({
     gyms: GYMS.map((g) => {
