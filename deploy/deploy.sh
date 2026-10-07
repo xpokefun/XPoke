@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Ship XPoke to your server and restart it. Usage: XPOKE_HOST=root@your-server deploy/deploy.sh
-# Touches only /root/xpoke and xpoke.service. The Caddy vhost is added once by hand (deploy/Caddyfile.snippet).
+# Expects the repo at /root/xpoke on the server, a filled-in /root/xpoke/server/.env, and the Caddy vhost
+# from deploy/Caddyfile.snippet. Touches only /root/xpoke and the xpoke units.
 set -euo pipefail
 HOST="${XPOKE_HOST:?set XPOKE_HOST=user@your-server}"
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
